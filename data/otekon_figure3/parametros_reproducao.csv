@@ -1,0 +1,12 @@
+parametro,valor,origem
+xi1 (ativacao),-0.63682,ajustado (literal=-0.9514)
+"xi2,xi3,xi4","0.00312, -0.000187, 7.4e-5",mantidos literais do artigo
+"R_mem (ohmica, livre)",0.20321 Ohm.cm2,ajustado (bypass da Eq.11/12)
+p_H2,1.0 atm,legenda da Figura 3 (painel 4)
+P_total_catodo (P_hava),5.0 atm,legenda da Figura 3 (painel 4)
+p_O2,0.21 x 5 = 1.05 atm,derivado (fracao molar padrao do ar)
+p_H2O,"0.5 atm (GAP, nao ajustado)","placeholder, nao restringido pelos dados"
+A_active,232 cm2,Tabela 1 (mesma inferencia do relatorio anterior)
+N_cells,40.85 (~41),ajustado contra curva de potencia
+fator de eficiencia,eta = 55.33% x Vcell,"ajuste empirico, nao corresponde a Vcell/E, /1.229, /1.254 ou /1.481 isoladamente"
+Vconc (concentracao),NAO incluida no modelo de reproducao,nao foi necessaria para explicar as curvas no intervalo digitalizado
