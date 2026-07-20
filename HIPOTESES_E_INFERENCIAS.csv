@@ -1,0 +1,14 @@
+hipotese,formulacao_ou_valor,evidencia,decisao
+Número de células,N=41,Inferido de P/(V j A); 40-41 é a faixa obtida e 41 é o inteiro mais provável.,ACEITA
+Área ativa,A=232 cm²,O fator 232 do produto de capacitância é interpretado como área ativa.,ACEITA
+Temperatura do painel de pressão,"373,15 K",A curva de 5 atm coincide com a curva de alta temperatura.,ACEITA
+Pressão parcial de H2O,"0,50 atm",Não identificável de forma única; efeito correlacionado ao intercepto de ativação.,HIPÓTESE
+Coeficientes de ativação impressos,Substituição direta,"Não reproduz nível, inclinação e separação de pressão simultaneamente.",REJEITA
+Coeficientes efetivos de ativação,xi1..xi4 identificados conjuntamente,Fecha as quatro curvas de tensão mantendo a estrutura da Eq. (4).,ACEITA
+Eq. 11 literal com termo 1 mol/cm³,R_mem da ordem de mΩ.cm²,Produz perda ôhmica muito inferior à inclinação publicada.,REJEITA
+Resistência efetiva via Eq. 10-12,"R_ref=0,22696 Ω.cm²",A concentração protônica efetiva é derivada do R_mem identificado.,ACEITA
+Eq. 13 com b em cm²/mA e a(T) impresso,Uso direto,"Provoca queda excessiva e a(T) negativa em 373,15 K.",REJEITA
+Eq. 13 com coeficientes efetivos,a(T) positivo e b em cm²/A,Reproduz a curvatura de alta corrente sem interpolação.,ACEITA
+"Eficiência termodinâmica padrão V/1,229 ou V/1,254",Definições usuais,Não coincide com a escala publicada.,REJEITA
+Eficiência com utilização inferida,"eta=100 U_f V/E0; U_f=0,69615",A relação eta/V da figura é praticamente constante.,ACEITA
+Fator oculto de potência por temperatura,Ajuste independente,"Permitiria coincidência artificial, mas viola P=N V j A.",REJEITA
