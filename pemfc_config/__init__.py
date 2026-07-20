@@ -1,17 +1,3 @@
-from .parameters import (
-    CONSTANTS,
-    DEFAULT_PARAMS,
-    GAP_FIELDS,
-    PARAMETER_LIBRARY,
-    PEMFCParameters,
-    PhysicalConstants,
-)
+from .parameters import DEFAULT_PARAMS, PEMFCParameters, PARAMETER_METADATA
 
-__all__ = [
-    "CONSTANTS",
-    "DEFAULT_PARAMS",
-    "GAP_FIELDS",
-    "PARAMETER_LIBRARY",
-    "PEMFCParameters",
-    "PhysicalConstants",
-]
+__all__ = ["DEFAULT_PARAMS", "PEMFCParameters", "PARAMETER_METADATA"]
