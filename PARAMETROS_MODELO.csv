@@ -1,0 +1,24 @@
+parametro,simbolo,valor_implementado,valor_publicado,unidade,origem,justificativa
+E0,E0,1.229,1.229,V,ARTIGO,Tabela 1.
+R,R,8.314,8.314,J mol⁻¹ K⁻¹,CONSTANTE FÍSICA,Tabela 1 e constante universal.
+F,F,96485.0,96485,C mol⁻¹,CONSTANTE FÍSICA,Tabela 1 e constante de Faraday.
+t_m,t_m,0.005,0.005,cm,ARTIGO,Tabela 1.
+D_H,D_H+,8.5e-07,0.85e-6,cm² s⁻¹,ARTIGO,Tabela 1; unidade cm²/s é exigida dimensionalmente pela Eq. (12).
+tau_H,τ_H+,12.78,12.78,s,ARTIGO,Tabela 1.
+C_dl_specific,C_dl/A,0.035,0.035 x 232 F (produto total),F cm⁻²,DERIVADO,"Decomposição de 0,035 × 232 F da Tabela 1."
+p_h2,p_H2,1.0,não informado,atm,INFERIDO,Legenda do painel de pressão e hipótese de H2 puro.
+p_h2o,p_H2O,0.5,não informado,atm,HIPÓTESE,Não informado; valor de referência preservado porque seu efeito é correlacionado ao intercepto de ativação.
+oxygen_fraction_air,y_O2,0.21,não informado,-,CONSTANTE FÍSICA,Fração molar aproximada do oxigênio no ar seco.
+pressure_temperature_K,T_p,373.15,não informado,K,INFERIDO,"O painel de 5 atm coincide com a curva de 373,15 K da Figura 3."
+A_active_cm2,A,232.0,232 aparece sem rótulo de área,cm²,INFERIDO,O fator 232 aparece no produto da capacitância de dupla camada.
+N_cells,N,41.0,não informado,células,INFERIDO,"Consistência entre V_cell, A e potência do stack na Figura 3; valor inteiro mais provável: 41."
+xi1,"ξ1,ef",-0.674670745,-0.9514,V,INFERIDO,Identificação conjunta contra as duas curvas de temperatura e as duas de pressão.
+xi2,"ξ2,ef",0.00177611023,0.00312,V K⁻¹,INFERIDO,Coeficiente efetivo; o valor impresso não fecha simultaneamente as curvas publicadas.
+xi3,"ξ3,ef",-7.34060893e-05,-0.000187,V K⁻¹,INFERIDO,Coeficiente efetivo da dependência logarítmica da corrente.
+xi4,"ξ4,ef",1.19477362e-05,7.4e-5,V K⁻¹,INFERIDO,O valor efetivo é exigido pela pequena separação entre as curvas de 1 e 5 atm; o coeficiente impresso gera diferença cerca de seis vezes maior.
+R_mem_ref_ohm_cm2,"R_mem,ref",0.226963516,não informado,Ω cm²,INFERIDO,Inclinação ôhmica identificada na Figura 3 e usada dentro da cadeia Eq. (10)-(12).
+R_mem_temperature_exponent,n_R,-0.761912143,não informado,-,INFERIDO,Dependência térmica efetiva da hidratação/condutividade não explicitada no artigo.
+concentration_a_ref_V,a_ref,0.00634107396,a=1.1e-4-1.2e-6(T-273),V,INFERIDO,Coeficiente efetivo da Eq. (13).
+concentration_a_temperature_V_K,a_T,1.44790439e-05,a=1.1e-4-1.2e-6(T-273),V K⁻¹,INFERIDO,"Dependência térmica efetiva; evita o valor negativo gerado pela expressão impressa em 373,15 K."
+concentration_b_cm2_A,b_eff,2.95057277,b=8e-3 cm²/mA,cm² A⁻¹,INFERIDO,Interpretação de unidade compatível com a curvatura publicada.
+fuel_utilization,U_f,0.6961520937,equação de eficiência não informada,-,INFERIDO,A expressão de eficiência não é fornecida; inferido pela proporcionalidade η/V da Figura 3.
