@@ -182,7 +182,7 @@ with tab_results:
             "Linhas tracejadas laranja/ciano: curvas digitalizadas do artigo."
         )
 
-    st.plotly_chart(figure3_plotly(data, reference_data=reference_data), width="stretch")
+    st.plotly_chart(figure3_plotly(data, reference_data=reference_data), use_container_width=True)
     png = figure3_matplotlib_bytes(data, "png", reference_data=reference_data)
     svg = figure3_matplotlib_bytes(data, "svg", reference_data=reference_data)
     csv = (
@@ -235,7 +235,7 @@ de engenharia reversa.
 """
     )
 
-    st.plotly_chart(optimization_flowchart_plotly(), width="stretch")
+    st.plotly_chart(optimization_flowchart_plotly(), use_container_width=True)
 
     st.markdown("### 1. Dados utilizados")
     st.markdown(
@@ -259,7 +259,7 @@ a escala do stack e o fator de utilização.
             ]
         ),
         hide_index=True,
-        width="stretch",
+        use_container_width=True,
     )
 
     st.markdown("### 2. Função objetivo")
@@ -285,7 +285,7 @@ Region Reflective, a partir de múltiplos inícios determinísticos. A semente f
 é aquele que apresenta o menor RMSE conjunto das quatro curvas de tensão.
 """
     )
-    st.dataframe(parameter_specification_table(), hide_index=True, width="stretch")
+    st.dataframe(parameter_specification_table(), hide_index=True, use_container_width=True)
 
     st.markdown("### 4. Inferências posteriores")
     st.latex(r"P_{stack}=N\,A\,j\,V_{cell}")
@@ -324,12 +324,12 @@ a partir das curvas de eficiência.
 
     if params_path.exists():
         identified = pd.read_csv(params_path)
-        st.dataframe(identified, hide_index=True, width="stretch")
+        st.dataframe(identified, hide_index=True, use_container_width=True)
 
     if runs_path.exists():
         runs = pd.read_csv(runs_path).sort_values("rmse_voltage_V")
         st.markdown("#### Robustez em relação ao valor inicial")
-        st.dataframe(runs.head(8), hide_index=True, width="stretch")
+        st.dataframe(runs.head(8), hide_index=True, use_container_width=True)
 
     if corr_path.exists():
         corr = pd.read_csv(corr_path, index_col=0)
@@ -346,7 +346,7 @@ a partir das curvas de eficiência.
             st.dataframe(
                 pd.DataFrame(pairs).sort_values("Correlação", key=lambda col: col.abs(), ascending=False),
                 hide_index=True,
-                width="stretch",
+                use_container_width=True,
             )
             st.info(
                 "Correlação elevada não invalida a reprodução das curvas, mas indica "
@@ -391,5 +391,5 @@ with tab_docs:
     values = params.to_dict()
     for name, meta in PARAMETER_METADATA.items():
         rows.append({"Parâmetro": name, "Símbolo": meta["symbol"], "Valor": values[name], "Unidade": meta["unit"], "Origem": meta["origin"], "Justificativa": meta["justification"]})
-    st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
+    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
     st.warning("A reprodução é computacional, não uma validação experimental. Os coeficientes identificados representam a interpretação mais provável compatível com os resultados publicados.")
