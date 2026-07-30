@@ -375,6 +375,19 @@ def _plot_article_matplotlib(ax, df, *, color: str, label: str):
         label=label,
     )
 
+def _plot_voltage_error_matplotlib(ax, model_df, reference_df, *, model_column: str, color: str, label: str):
+    x, error_percent, _, _ = _percentage_error_series(model_df, reference_df, model_column)
+    ax.plot(
+        x,
+        error_percent,
+        color=color,
+        linewidth=2.0,
+        marker="o",
+        markersize=2.8,
+        label=label,
+    )
+
+
 
 def _matplotlib_figure(data: dict, reference_data: dict | None = None):
     fig, axes = plt.subplots(2, 2, figsize=(13.34, 8.0), constrained_layout=True)
@@ -446,6 +459,55 @@ def _matplotlib_figure(data: dict, reference_data: dict | None = None):
     ax3.set_title("Eficiência elétrica")
     ax4.set_title("Efeito da pressão do ar")
     return fig
+
+
+def _voltage_error_matplotlib_figure(data: dict, reference_data: dict):
+    fig, axes = plt.subplots(1, 2, figsize=(12.8, 4.8), constrained_layout=True)
+    ax1, ax2 = axes.flat
+
+    for key, color, label in [("T_298", BLUE, "T = 298,15 K"), ("T_373", RED, "T = 373,15 K")]:
+        _plot_voltage_error_matplotlib(
+            ax1,
+            data[key],
+            reference_data["voltage"][key],
+            model_column="V_cell_V",
+            color=color,
+            label=label,
+        )
+
+    for key, color, label in [("P_1", BLUE, "P_ar = 1 atm"), ("P_5", RED, "P_ar = 5 atm")]:
+        _plot_voltage_error_matplotlib(
+            ax2,
+            data[key],
+            reference_data["pressure"][key],
+            model_column="V_cell_V",
+            color=color,
+            label=label,
+        )
+
+    for ax in (ax1, ax2):
+        ax.set_xlim(0, 1.2)
+        ax.set_xlabel("Densidade de corrente (A/cm²)")
+        ax.set_ylabel("Erro percentual absoluto (%)")
+        ax.grid(True, alpha=0.55)
+        ax.legend(loc="best", fontsize=8)
+
+    ax1.set_title("Erro na tensão — efeito da temperatura")
+    ax2.set_title("Erro na tensão — efeito da pressão")
+    return fig
+
+
+def figure3_voltage_error_svg_bytes(data: dict, reference_data: dict) -> bytes:
+    """Exporta em SVG apenas os gráficos de erro percentual da tensão.
+
+    O arquivo contém dois painéis: tensão vs. temperatura e tensão vs. pressão.
+    """
+    fig = _voltage_error_matplotlib_figure(data, reference_data)
+    buffer = BytesIO()
+    fig.savefig(buffer, format="svg", bbox_inches="tight")
+    plt.close(fig)
+    buffer.seek(0)
+    return buffer.read()
 
 
 def figure3_matplotlib_bytes(

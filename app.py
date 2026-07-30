@@ -13,6 +13,7 @@ from visualization.plots import (
     figure3_matplotlib_bytes,
     figure3_percentage_error_plotly,
     figure3_plotly,
+    figure3_voltage_error_svg_bytes,
 )
 from visualization.optimization import (
     optimization_flowchart_article_bytes,
@@ -202,13 +203,21 @@ with tab_results:
 
     png = figure3_matplotlib_bytes(data, "png", reference_data=reference_data)
     svg = figure3_matplotlib_bytes(data, "svg", reference_data=reference_data)
+    voltage_error_svg = (
+        figure3_voltage_error_svg_bytes(data, reference_data)
+        if reference_data is not None
+        else None
+    )
     csv = (
         _comparison_csv(data, reference_data)
         if reference_data is not None
         else _combined_csv(data)
     )
     suffix = "comparacao_otekon" if overlay_article else "modelo"
-    d1, d2, d3 = st.columns(3)
+    if reference_data is not None:
+        d1, d2, d3, d4 = st.columns(4)
+    else:
+        d1, d2, d3 = st.columns(3)
     d1.download_button(
         "Baixar gráficos em PNG",
         png,
@@ -227,6 +236,13 @@ with tab_results:
         f"curvas_{suffix}.csv",
         "text/csv",
     )
+    if reference_data is not None:
+        d4.download_button(
+            "Baixar erro de tensão em SVG",
+            voltage_error_svg,
+            "erro_percentual_tensao.svg",
+            "image/svg+xml",
+        )
 
 with tab_sensitivity:
     st.subheader("Sensibilidade calculada pelo mesmo PEMFCModel")
