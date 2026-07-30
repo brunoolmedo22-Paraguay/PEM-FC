@@ -9,7 +9,11 @@ import streamlit as st
 from models.pemfc_model import PEMFCModel
 from pemfc_config import DEFAULT_PARAMS, PARAMETER_METADATA
 from simulation.solver import build_figure3_dataset, sensitivity_pressure, sensitivity_temperature
-from visualization.plots import figure3_matplotlib_bytes, figure3_plotly
+from visualization.plots import (
+    figure3_matplotlib_bytes,
+    figure3_percentage_error_plotly,
+    figure3_plotly,
+)
 from visualization.optimization import (
     optimization_flowchart_article_bytes,
     optimization_flowchart_bytes,
@@ -183,6 +187,19 @@ with tab_results:
         )
 
     st.plotly_chart(figure3_plotly(data, reference_data=reference_data), use_container_width=True)
+
+    if reference_data is not None:
+        st.subheader("Erro percentual ponto a ponto da replicação")
+        st.caption(
+            "Erro percentual absoluto calculado como |modelo − artigo| / |artigo| × 100 "
+            "em cada densidade de corrente digitalizada. Valores de referência muito "
+            "baixos podem amplificar o erro percentual, especialmente no início da curva de potência."
+        )
+        st.plotly_chart(
+            figure3_percentage_error_plotly(data, reference_data),
+            use_container_width=True,
+        )
+
     png = figure3_matplotlib_bytes(data, "png", reference_data=reference_data)
     svg = figure3_matplotlib_bytes(data, "svg", reference_data=reference_data)
     csv = (

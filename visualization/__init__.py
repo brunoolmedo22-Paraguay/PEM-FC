@@ -1,3 +1,11 @@
-from .plots import figure3_plotly, figure3_matplotlib_bytes
+from .plots import (
+    figure3_matplotlib_bytes,
+    figure3_percentage_error_plotly,
+    figure3_plotly,
+)
 
-__all__ = ["figure3_plotly", "figure3_matplotlib_bytes"]
+__all__ = [
+    "figure3_plotly",
+    "figure3_percentage_error_plotly",
+    "figure3_matplotlib_bytes",
+]

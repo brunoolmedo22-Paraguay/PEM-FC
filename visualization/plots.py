@@ -3,6 +3,7 @@ from __future__ import annotations
 from io import BytesIO
 
 import matplotlib.pyplot as plt
+import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
@@ -47,6 +48,152 @@ def _add_article_trace_plotly(
         row=row,
         col=col,
     )
+
+
+def _percentage_error_series(model_df, reference_df, model_column: str):
+    """Calcula o erro percentual absoluto nos pontos x digitalizados do artigo."""
+    x_reference = reference_df["current_density_A_cm2"].to_numpy(dtype=float)
+    article_values = reference_df["value"].to_numpy(dtype=float)
+    model_values = np.interp(
+        x_reference,
+        model_df["current_density_A_cm2"].to_numpy(dtype=float),
+        model_df[model_column].to_numpy(dtype=float),
+    )
+    denominator = np.maximum(np.abs(article_values), 1e-12)
+    error_percent = np.abs(model_values - article_values) / denominator * 100.0
+    return x_reference, error_percent, model_values, article_values
+
+
+def _add_percentage_error_trace(
+    fig,
+    model_df,
+    reference_df,
+    *,
+    model_column: str,
+    row: int,
+    col: int,
+    name: str,
+    color: str,
+    legendgroup: str,
+    showlegend: bool,
+):
+    x, error_percent, model_values, article_values = _percentage_error_series(
+        model_df, reference_df, model_column
+    )
+    customdata = np.column_stack((model_values, article_values))
+    fig.add_trace(
+        go.Scatter(
+            x=x,
+            y=error_percent,
+            name=name,
+            mode="lines+markers",
+            line=dict(color=color, width=2.2),
+            marker=dict(color=color, size=4),
+            legendgroup=legendgroup,
+            showlegend=showlegend,
+            customdata=customdata,
+            hovertemplate=(
+                "Densidade de corrente: %{x:.4f} A/cm²"
+                "<br>Modelo: %{customdata[0]:.4f}"
+                "<br>Artigo: %{customdata[1]:.4f}"
+                "<br>Erro absoluto: %{y:.3f}%<extra></extra>"
+            ),
+        ),
+        row=row,
+        col=col,
+    )
+
+
+def figure3_percentage_error_plotly(data: dict, reference_data: dict):
+    """Gera o erro percentual absoluto ponto a ponto da replicação da Figura 3."""
+    fig = make_subplots(
+        rows=2,
+        cols=2,
+        subplot_titles=(
+            "Erro na tensão — efeito da temperatura",
+            "Erro na potência do stack",
+            "Erro na eficiência elétrica",
+            "Erro na tensão — efeito da pressão",
+        ),
+        horizontal_spacing=0.12,
+        vertical_spacing=0.18,
+    )
+
+    temperature_cases = [
+        ("T_298", BLUE, "T = 298,15 K"),
+        ("T_373", RED, "T = 373,15 K"),
+    ]
+    quantity_columns = {
+        "voltage": "V_cell_V",
+        "power": "P_stack_W",
+        "efficiency": "efficiency_percent",
+    }
+    panel_positions = {
+        "voltage": (1, 1),
+        "power": (1, 2),
+        "efficiency": (2, 1),
+    }
+
+    for quantity, model_column in quantity_columns.items():
+        row, col = panel_positions[quantity]
+        for key, color, label in temperature_cases:
+            _add_percentage_error_trace(
+                fig,
+                data[key],
+                reference_data[quantity][key],
+                model_column=model_column,
+                row=row,
+                col=col,
+                name=label,
+                color=color,
+                legendgroup=f"error_temperature_{key}",
+                showlegend=quantity == "voltage",
+            )
+
+    pressure_cases = [
+        ("P_1", BLUE, "P_ar = 1 atm"),
+        ("P_5", RED, "P_ar = 5 atm"),
+    ]
+    for key, color, label in pressure_cases:
+        _add_percentage_error_trace(
+            fig,
+            data[key],
+            reference_data["pressure"][key],
+            model_column="V_cell_V",
+            row=2,
+            col=2,
+            name=label,
+            color=color,
+            legendgroup=f"error_pressure_{key}",
+            showlegend=True,
+        )
+
+    for row, col in [(1, 1), (1, 2), (2, 1), (2, 2)]:
+        fig.update_xaxes(
+            title_text="Densidade de corrente (A/cm²)",
+            range=[0, 1.2],
+            dtick=0.2,
+            showgrid=True,
+            gridcolor="rgba(100,100,100,0.35)",
+            row=row,
+            col=col,
+        )
+        fig.update_yaxes(
+            title_text="Erro percentual absoluto (%)",
+            rangemode="tozero",
+            showgrid=True,
+            gridcolor="rgba(100,100,100,0.35)",
+            row=row,
+            col=col,
+        )
+
+    fig.update_layout(
+        height=820,
+        margin=dict(l=40, r=30, t=115, b=40),
+        legend=dict(orientation="h", y=1.13, x=0),
+        hovermode="x unified",
+    )
+    return fig
 
 
 def figure3_plotly(data: dict, reference_data: dict | None = None):
