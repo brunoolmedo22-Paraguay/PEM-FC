@@ -576,6 +576,59 @@ def figure3_single_panel_bytes(
     return buffer.read()
 
 
+def _single_error_panel_matplotlib_figure(data: dict, panel: str, reference_data: dict):
+    fig, ax = plt.subplots(1, 1, figsize=(6.6, 4.8), constrained_layout=True)
+
+    if panel == "error_voltage_temperature":
+        for key, color, label in [("T_298", BLUE, "T = 298,15 K"), ("T_373", RED, "T = 373,15 K")]:
+            _plot_voltage_error_matplotlib(
+                ax,
+                data[key],
+                reference_data["voltage"][key],
+                model_column="V_cell_V",
+                color=color,
+                label=label,
+            )
+        ax.set_title("Erro na tensão — efeito da temperatura")
+
+    elif panel == "error_voltage_pressure":
+        for key, color, label in [("P_1", BLUE, "P_ar = 1 atm"), ("P_5", RED, "P_ar = 5 atm")]:
+            _plot_voltage_error_matplotlib(
+                ax,
+                data[key],
+                reference_data["pressure"][key],
+                model_column="V_cell_V",
+                color=color,
+                label=label,
+            )
+        ax.set_title("Erro na tensão — efeito da pressão")
+
+    else:
+        raise ValueError(f"Painel de erro desconhecido: {panel}")
+
+    ax.set_xlim(0, 1.2)
+    ax.set_xlabel("Densidade de corrente (A/cm²)")
+    ax.set_ylabel("Erro percentual absoluto (%)")
+    ax.grid(True, alpha=0.55)
+    ax.legend(loc="best", fontsize=8)
+    return fig
+
+
+def figure3_single_error_panel_bytes(data: dict, panel: str, fmt: str = "svg", reference_data: dict | None = None) -> bytes:
+    """Exporta individualmente um painel de erro percentual da tensão.
+
+    Panels aceitos: error_voltage_temperature, error_voltage_pressure.
+    """
+    if reference_data is None:
+        raise ValueError("reference_data é obrigatório para exportar gráficos de erro.")
+    fig = _single_error_panel_matplotlib_figure(data, panel, reference_data)
+    buffer = BytesIO()
+    fig.savefig(buffer, format=fmt, dpi=180 if fmt == "png" else None, bbox_inches="tight")
+    plt.close(fig)
+    buffer.seek(0)
+    return buffer.read()
+
+
 def figure3_voltage_error_svg_bytes(data: dict, reference_data: dict) -> bytes:
     """Exporta em SVG apenas os gráficos de erro percentual da tensão.
 

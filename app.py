@@ -13,6 +13,7 @@ from visualization.plots import (
     figure3_matplotlib_bytes,
     figure3_percentage_error_plotly,
     figure3_plotly,
+    figure3_single_error_panel_bytes,
     figure3_single_panel_bytes,
     figure3_voltage_error_svg_bytes,
 )
@@ -276,6 +277,29 @@ with tab_results:
         f"tensao_efeito_pressao_{suffix}.svg",
         "image/svg+xml",
     )
+
+    if reference_data is not None:
+        st.markdown("### Downloads individuais dos erros")
+        st.caption("Escolha individualmente qual gráfico de erro percentual da tensão deseja baixar em SVG.")
+        error_voltage_temp_svg = figure3_single_error_panel_bytes(
+            data, "error_voltage_temperature", "svg", reference_data=reference_data
+        )
+        error_voltage_pressure_svg = figure3_single_error_panel_bytes(
+            data, "error_voltage_pressure", "svg", reference_data=reference_data
+        )
+        e1, e2 = st.columns(2)
+        e1.download_button(
+            "Erro de tensão × temperatura (SVG)",
+            error_voltage_temp_svg,
+            "erro_tensao_efeito_temperatura.svg",
+            "image/svg+xml",
+        )
+        e2.download_button(
+            "Erro de tensão × pressão (SVG)",
+            error_voltage_pressure_svg,
+            "erro_tensao_efeito_pressao.svg",
+            "image/svg+xml",
+        )
 
 with tab_sensitivity:
     st.subheader("Sensibilidade calculada pelo mesmo PEMFCModel")
