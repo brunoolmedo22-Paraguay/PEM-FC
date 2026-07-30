@@ -497,6 +497,85 @@ def _voltage_error_matplotlib_figure(data: dict, reference_data: dict):
     return fig
 
 
+def _single_panel_matplotlib_figure(
+    data: dict,
+    panel: str,
+    reference_data: dict | None = None,
+):
+    fig, ax = plt.subplots(1, 1, figsize=(6.6, 4.8), constrained_layout=True)
+
+    if panel == "voltage_temperature":
+        for key, color, label in [("T_298", BLUE, "T = 298,15 K"), ("T_373", RED, "T = 373,15 K")]:
+            df = data[key]
+            ax.plot(df.current_density_A_cm2, df.V_cell_V, color=color, linewidth=2.2, label=f"Modelo — {label}")
+        if reference_data is not None:
+            for key, color, label in [("T_298", ARTICLE_BLUE_COMPLEMENT, "T = 298,15 K"), ("T_373", ARTICLE_RED_COMPLEMENT, "T = 373,15 K")]:
+                _plot_article_matplotlib(ax, reference_data["voltage"][key], color=color, label=f"Artigo — {label}")
+        ax.set_title("Efeito da temperatura sobre a tensão")
+        ax.set_ylabel("Tensão da célula (V)")
+        ax.set_ylim(0.5, 1.1)
+
+    elif panel == "power_stack":
+        for key, color, label in [("T_298", BLUE, "T = 298,15 K"), ("T_373", RED, "T = 373,15 K")]:
+            df = data[key]
+            ax.plot(df.current_density_A_cm2, df.P_stack_W, color=color, linewidth=2.2, label=f"Modelo — {label}")
+        if reference_data is not None:
+            for key, color, label in [("T_298", ARTICLE_BLUE_COMPLEMENT, "T = 298,15 K"), ("T_373", ARTICLE_RED_COMPLEMENT, "T = 373,15 K")]:
+                _plot_article_matplotlib(ax, reference_data["power"][key], color=color, label=f"Artigo — {label}")
+        ax.set_title("Potência do stack")
+        ax.set_ylabel("Potência (W)")
+        ax.set_ylim(0, 6000)
+
+    elif panel == "efficiency":
+        for key, color, label in [("T_298", BLUE, "T = 298,15 K"), ("T_373", RED, "T = 373,15 K")]:
+            df = data[key]
+            ax.plot(df.current_density_A_cm2, df.efficiency_percent, color=color, linewidth=2.2, label=f"Modelo — {label}")
+        if reference_data is not None:
+            for key, color, label in [("T_298", ARTICLE_BLUE_COMPLEMENT, "T = 298,15 K"), ("T_373", ARTICLE_RED_COMPLEMENT, "T = 373,15 K")]:
+                _plot_article_matplotlib(ax, reference_data["efficiency"][key], color=color, label=f"Artigo — {label}")
+        ax.set_title("Eficiência elétrica")
+        ax.set_ylabel("Eficiência (%)")
+        ax.set_ylim(25, 60)
+
+    elif panel == "voltage_pressure":
+        for key, color, label in [("P_1", BLUE, "P_ar = 1 atm"), ("P_5", RED, "P_ar = 5 atm")]:
+            df = data[key]
+            ax.plot(df.current_density_A_cm2, df.V_cell_V, color=color, linewidth=2.2, label=f"Modelo — {label}")
+        if reference_data is not None:
+            for key, color, label in [("P_1", ARTICLE_BLUE_COMPLEMENT, "P_ar = 1 atm"), ("P_5", ARTICLE_RED_COMPLEMENT, "P_ar = 5 atm")]:
+                _plot_article_matplotlib(ax, reference_data["pressure"][key], color=color, label=f"Artigo — {label}")
+        ax.set_title("Efeito da pressão do ar")
+        ax.set_ylabel("Tensão da célula (V)")
+        ax.set_ylim(0.5, 1.1)
+
+    else:
+        raise ValueError(f"Painel desconhecido: {panel}")
+
+    ax.set_xlim(0, 1.2)
+    ax.set_xlabel("Densidade de corrente (A/cm²)")
+    ax.grid(True, alpha=0.55)
+    ax.legend(loc="best", fontsize=8)
+    return fig
+
+
+def figure3_single_panel_bytes(
+    data: dict,
+    panel: str,
+    fmt: str = "svg",
+    reference_data: dict | None = None,
+) -> bytes:
+    """Exporta individualmente um dos painéis da Figura 3.
+
+    Panels aceitos: voltage_temperature, power_stack, efficiency, voltage_pressure.
+    """
+    fig = _single_panel_matplotlib_figure(data, panel, reference_data=reference_data)
+    buffer = BytesIO()
+    fig.savefig(buffer, format=fmt, dpi=180 if fmt == "png" else None, bbox_inches="tight")
+    plt.close(fig)
+    buffer.seek(0)
+    return buffer.read()
+
+
 def figure3_voltage_error_svg_bytes(data: dict, reference_data: dict) -> bytes:
     """Exporta em SVG apenas os gráficos de erro percentual da tensão.
 

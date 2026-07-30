@@ -13,6 +13,7 @@ from visualization.plots import (
     figure3_matplotlib_bytes,
     figure3_percentage_error_plotly,
     figure3_plotly,
+    figure3_single_panel_bytes,
     figure3_voltage_error_svg_bytes,
 )
 from visualization.optimization import (
@@ -243,6 +244,38 @@ with tab_results:
             "erro_percentual_tensao.svg",
             "image/svg+xml",
         )
+
+    st.markdown("### Downloads individuais dos gráficos")
+    st.caption("Baixe em SVG apenas o painel que você quiser, sem precisar exportar os quatro gráficos juntos.")
+    panel_voltage_temp_svg = figure3_single_panel_bytes(data, "voltage_temperature", "svg", reference_data=reference_data)
+    panel_power_svg = figure3_single_panel_bytes(data, "power_stack", "svg", reference_data=reference_data)
+    panel_eff_svg = figure3_single_panel_bytes(data, "efficiency", "svg", reference_data=reference_data)
+    panel_voltage_pressure_svg = figure3_single_panel_bytes(data, "voltage_pressure", "svg", reference_data=reference_data)
+    p1, p2, p3, p4 = st.columns(4)
+    p1.download_button(
+        "Tensão × temperatura (SVG)",
+        panel_voltage_temp_svg,
+        f"tensao_efeito_temperatura_{suffix}.svg",
+        "image/svg+xml",
+    )
+    p2.download_button(
+        "Potência do stack (SVG)",
+        panel_power_svg,
+        f"potencia_stack_{suffix}.svg",
+        "image/svg+xml",
+    )
+    p3.download_button(
+        "Eficiência elétrica (SVG)",
+        panel_eff_svg,
+        f"eficiencia_eletrica_{suffix}.svg",
+        "image/svg+xml",
+    )
+    p4.download_button(
+        "Tensão × pressão (SVG)",
+        panel_voltage_pressure_svg,
+        f"tensao_efeito_pressao_{suffix}.svg",
+        "image/svg+xml",
+    )
 
 with tab_sensitivity:
     st.subheader("Sensibilidade calculada pelo mesmo PEMFCModel")
