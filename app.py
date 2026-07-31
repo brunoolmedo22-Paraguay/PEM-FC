@@ -285,11 +285,11 @@ with tab_results:
             data, reference_data
         )
         st.download_button(
-            "Tensão × temperatura — ZOOM NAS DIFERENÇAS MÁXIMA E MÍNIMA (SVG)",
+            "Tensão × temperatura — ZOOM MENOR + LEGENDA INTERNA (SVG)",
             panel_voltage_temp_zoom_svg,
-            "tensao_temperatura_zoom_diferencas_v1.svg",
+            "tensao_temperatura_zoom_diferencas_v2.svg",
             "image/svg+xml",
-            key="download_tensao_temperatura_zoom_diferencas_v1",
+            key="download_tensao_temperatura_zoom_diferencas_v2",
         )
 
     if reference_data is not None:

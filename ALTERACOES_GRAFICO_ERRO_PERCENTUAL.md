@@ -25,3 +25,6 @@ O cursor mostra a densidade de corrente, o valor calculado pelo modelo, o valor 
   diferença absoluta entre o modelo e os dados digitalizados.
 - As novas figuras permanecem sem título interno e com o eixo de densidade de
   corrente limitado a 1,0 A/cm².
+- Revisão v2 do gráfico de tensão: os dois detalhes foram reduzidos, o detalhe
+  inferior foi elevado para não sobrepor os eixos e a legenda voltou ao canto
+  superior direito, dentro da figura.

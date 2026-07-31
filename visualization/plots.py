@@ -986,14 +986,10 @@ def _temperature_voltage_zoom_matplotlib_figure(data: dict, reference_data: dict
 
     minimum, maximum = _temperature_voltage_difference_extrema(data, reference_data)
 
-    def add_difference_inset(point, *, loc, title, edge_color, width, height):
-        inset = inset_axes(
-            ax,
-            width=width,
-            height=height,
-            loc=loc,
-            borderpad=0.95,
-        )
+    def add_difference_inset(point, *, bounds, title, edge_color):
+        # ``bounds`` usa coordenadas relativas ao painel principal. Assim os
+        # detalhes ficam menores e, sobretudo, afastados dos rótulos do eixo x.
+        inset = ax.inset_axes(bounds)
         key = point["key"]
         model_df = data[key]
         article_df = reference_data["voltage"][key]
@@ -1073,19 +1069,15 @@ def _temperature_voltage_zoom_matplotlib_figure(data: dict, reference_data: dict
 
     add_difference_inset(
         maximum,
-        loc="upper center",
+        bounds=[0.34, 0.64, 0.27, 0.28],
         title="MAIOR DIFERENÇA",
         edge_color="#8B1A1A",
-        width="34%",
-        height="35%",
     )
     add_difference_inset(
         minimum,
-        loc="lower left",
+        bounds=[0.04, 0.17, 0.27, 0.27],
         title="MENOR DIFERENÇA",
         edge_color="#176B3A",
-        width="34%",
-        height="35%",
     )
 
     ax.set_xlim(0, 1.0)
@@ -1094,11 +1086,10 @@ def _temperature_voltage_zoom_matplotlib_figure(data: dict, reference_data: dict
     ax.set_ylabel("Tensão da célula (V)")
     ax.grid(True, alpha=0.55)
     ax.legend(
-        loc="lower center",
-        bbox_to_anchor=(0.5, 1.01),
-        fontsize=6.2,
-        ncol=2,
-        borderaxespad=0.0,
+        loc="upper right",
+        fontsize=5.5,
+        ncol=1,
+        borderaxespad=0.45,
     )
     return fig
 
