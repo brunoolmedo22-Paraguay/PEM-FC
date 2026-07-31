@@ -502,16 +502,29 @@ def _single_panel_matplotlib_figure(
     panel: str,
     reference_data: dict | None = None,
 ):
-    fig, ax = plt.subplots(1, 1, figsize=(6.6, 4.8), constrained_layout=True)
+    # O painel de tensão × temperatura é inserido no artigo com o título na
+    # legenda do LaTeX. Por isso, sua exportação é 25% mais baixa que o padrão.
+    figure_height = 3.6 if panel == "voltage_temperature" else 4.8
+    fig, ax = plt.subplots(1, 1, figsize=(6.6, figure_height), constrained_layout=True)
 
     if panel == "voltage_temperature":
         for key, color, label in [("T_298", BLUE, "T = 298,15 K"), ("T_373", RED, "T = 373,15 K")]:
             df = data[key]
-            ax.plot(df.current_density_A_cm2, df.V_cell_V, color=color, linewidth=2.2, label=f"Modelo — {label}")
+            ax.plot(
+                df.current_density_A_cm2,
+                df.V_cell_V,
+                color=color,
+                linewidth=2.2,
+                label=f"MODELO PROPOSTO — {label}",
+            )
         if reference_data is not None:
             for key, color, label in [("T_298", ARTICLE_BLUE_COMPLEMENT, "T = 298,15 K"), ("T_373", ARTICLE_RED_COMPLEMENT, "T = 373,15 K")]:
-                _plot_article_matplotlib(ax, reference_data["voltage"][key], color=color, label=f"Artigo — {label}")
-        ax.set_title("Efeito da temperatura sobre a tensão")
+                _plot_article_matplotlib(
+                    ax,
+                    reference_data["voltage"][key],
+                    color=color,
+                    label=f"N. ALTINTAŞ AND R. ERTAN — {label}",
+                )
         ax.set_ylabel("Tensão da célula (V)")
         ax.set_ylim(0.5, 1.1)
 
