@@ -5,6 +5,7 @@ from io import BytesIO
 import matplotlib.pyplot as plt
 import numpy as np
 import plotly.graph_objects as go
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes, mark_inset
 from plotly.subplots import make_subplots
 
 
@@ -110,6 +111,50 @@ def _temperature_voltage_error_extrema(data: dict, reference_data: dict):
     minimum = min(candidates, key=lambda point: point["error_percent"])
     maximum = max(candidates, key=lambda point: point["error_percent"])
     return minimum, maximum
+
+
+def _temperature_voltage_difference_extrema(data: dict, reference_data: dict):
+    """Retorna as diferenças absolutas mínima e máxima entre modelo e artigo."""
+    candidates = []
+    for key, temperature_label in [
+        ("T_298", "T = 298,15 K"),
+        ("T_373", "T = 373,15 K"),
+    ]:
+        x, _, model_values, article_values = _percentage_error_series(
+            data[key], reference_data["voltage"][key], "V_cell_V"
+        )
+        differences = np.abs(model_values - article_values)
+        valid = (
+            np.isfinite(x)
+            & np.isfinite(differences)
+            & (x >= 0.0)
+            & (x <= 1.0)
+        )
+        x_valid = x[valid]
+        differences_valid = differences[valid]
+        model_valid = model_values[valid]
+        article_valid = article_values[valid]
+        if len(x_valid) == 0:
+            continue
+
+        for index in (int(np.argmin(differences_valid)), int(np.argmax(differences_valid))):
+            candidates.append(
+                {
+                    "key": key,
+                    "temperature": temperature_label,
+                    "current_density": float(x_valid[index]),
+                    "difference_V": float(differences_valid[index]),
+                    "model_V": float(model_valid[index]),
+                    "article_V": float(article_valid[index]),
+                }
+            )
+
+    if not candidates:
+        raise ValueError("Não há pontos válidos para calcular as diferenças de tensão.")
+    return (
+        min(candidates, key=lambda point: point["difference_V"]),
+        max(candidates, key=lambda point: point["difference_V"]),
+    )
 
 
 def _decimal_comma(value: float, digits: int) -> str:
@@ -781,6 +826,283 @@ def _single_error_panel_matplotlib_figure(data: dict, panel: str, reference_data
     return fig
 
 
+def _temperature_error_zoom_matplotlib_figure(data: dict, reference_data: dict):
+    """Cria o erro de tensão com um detalhe ampliado ao redor do máximo."""
+    fig, ax = plt.subplots(1, 1, figsize=(6.6, 4.8), constrained_layout=True)
+
+    curves = []
+    for key, color, label in [
+        ("T_298", BLUE, "T = 298,15 K"),
+        ("T_373", RED, "T = 373,15 K"),
+    ]:
+        x, error_percent, _, _ = _percentage_error_series(
+            data[key], reference_data["voltage"][key], "V_cell_V"
+        )
+        curves.append((x, error_percent, color, label))
+        ax.plot(
+            x,
+            error_percent,
+            color=color,
+            linewidth=2.0,
+            marker="o",
+            markersize=2.8,
+            label=label,
+        )
+
+    minimum, maximum = _temperature_voltage_error_extrema(data, reference_data)
+
+    # O recorte acompanha automaticamente o máximo, mas permanece dentro do
+    # domínio físico exibido no gráfico principal.
+    zoom_half_width = 0.055
+    zoom_x_min = max(0.0, maximum["current_density"] - zoom_half_width)
+    zoom_x_max = min(1.0, maximum["current_density"] + zoom_half_width)
+    local_values = np.concatenate(
+        [
+            error[(x >= zoom_x_min) & (x <= zoom_x_max)]
+            for x, error, _, _ in curves
+        ]
+    )
+    local_y_min = max(0.0, float(np.min(local_values)) - 0.08)
+    local_y_max = float(np.max(local_values)) + 0.13
+
+    inset = inset_axes(
+        ax,
+        width="44%",
+        height="43%",
+        loc="upper right",
+        borderpad=1.05,
+    )
+    for x, error_percent, color, _ in curves:
+        inset.plot(
+            x,
+            error_percent,
+            color=color,
+            linewidth=1.55,
+            marker="o",
+            markersize=2.2,
+        )
+    inset.set_xlim(zoom_x_min, zoom_x_max)
+    inset.set_ylim(local_y_min, local_y_max)
+    inset.grid(True, alpha=0.38, linewidth=0.55)
+    inset.tick_params(labelsize=6.3, pad=1.5)
+    inset.scatter(
+        [maximum["current_density"]],
+        [maximum["error_percent"]],
+        s=31,
+        facecolor="white",
+        edgecolor="#8B1A1A",
+        linewidth=1.2,
+        zorder=6,
+    )
+    inset.annotate(
+        f"Máx.: {_decimal_comma(maximum['error_percent'], 3)}%",
+        xy=(maximum["current_density"], maximum["error_percent"]),
+        xytext=(21, -22),
+        textcoords="offset points",
+        ha="left",
+        va="top",
+        fontsize=6.6,
+        color="#8B1A1A",
+        arrowprops=dict(arrowstyle="->", color="#8B1A1A", linewidth=0.9),
+    )
+    mark_inset(
+        ax,
+        inset,
+        loc1=2,
+        loc2=4,
+        fc="none",
+        ec="#555555",
+        linestyle="--",
+        linewidth=0.9,
+    )
+
+    # Mantém a informação do mínimo global no painel principal; o máximo é
+    # identificado dentro do detalhe ampliado para evitar textos duplicados.
+    ax.scatter(
+        [minimum["current_density"]],
+        [minimum["error_percent"]],
+        s=42,
+        facecolor="white",
+        edgecolor="#176B3A",
+        linewidth=1.3,
+        zorder=6,
+    )
+    ax.annotate(
+        f"Mín.: {_decimal_comma(minimum['error_percent'], 4)}%\n"
+        f"em {_decimal_comma(minimum['current_density'], 3)} A/cm²",
+        xy=(minimum["current_density"], minimum["error_percent"]),
+        xytext=(18, 34),
+        textcoords="offset points",
+        ha="left",
+        va="bottom",
+        fontsize=7.2,
+        color="#222222",
+        bbox=dict(boxstyle="round,pad=0.28", facecolor="white", edgecolor="#176B3A", alpha=0.95),
+        arrowprops=dict(arrowstyle="->", color="#176B3A", linewidth=1.0),
+        zorder=7,
+    )
+
+    ax.set_xlim(0, 1.0)
+    ax.set_ylim(-0.06, maximum["error_percent"] * 1.12)
+    ax.set_xlabel("Densidade de corrente (A/cm²)")
+    ax.set_ylabel("Erro percentual absoluto (%)")
+    ax.grid(True, alpha=0.55)
+    ax.legend(
+        loc="lower center",
+        bbox_to_anchor=(0.5, 1.01),
+        fontsize=8,
+        ncol=2,
+        borderaxespad=0.0,
+    )
+    return fig
+
+
+def _temperature_voltage_zoom_matplotlib_figure(data: dict, reference_data: dict):
+    """Cria tensão × temperatura com detalhes das diferenças extrema."""
+    fig, ax = plt.subplots(1, 1, figsize=(6.6, 3.9), constrained_layout=True)
+    model_colors = {"T_298": BLUE, "T_373": RED}
+    article_colors = {
+        "T_298": ARTICLE_BLUE_COMPLEMENT,
+        "T_373": ARTICLE_RED_COMPLEMENT,
+    }
+    temperature_labels = {"T_298": "T = 298,15 K", "T_373": "T = 373,15 K"}
+
+    for key in ("T_298", "T_373"):
+        label = temperature_labels[key]
+        df = data[key]
+        ax.plot(
+            df.current_density_A_cm2,
+            df.V_cell_V,
+            color=model_colors[key],
+            linewidth=2.2,
+            label=f"{PROPOSED_MODEL_LABEL} — {label}",
+        )
+        _plot_article_matplotlib(
+            ax,
+            reference_data["voltage"][key],
+            color=article_colors[key],
+            label=f"{ARTICLE_SHORT_REFERENCE} — {label}",
+        )
+
+    minimum, maximum = _temperature_voltage_difference_extrema(data, reference_data)
+
+    def add_difference_inset(point, *, loc, title, edge_color, width, height):
+        inset = inset_axes(
+            ax,
+            width=width,
+            height=height,
+            loc=loc,
+            borderpad=0.95,
+        )
+        key = point["key"]
+        model_df = data[key]
+        article_df = reference_data["voltage"][key]
+        center = point["current_density"]
+        half_width = 0.045 if center < 0.1 else 0.065
+        x_min = max(0.0, center - half_width)
+        x_max = min(1.0, center + half_width)
+
+        inset.plot(
+            model_df.current_density_A_cm2,
+            model_df.V_cell_V,
+            color=model_colors[key],
+            linewidth=1.6,
+        )
+        inset.plot(
+            article_df.current_density_A_cm2,
+            article_df.value,
+            color=article_colors[key],
+            linewidth=1.45,
+            linestyle="--",
+            marker="o",
+            markersize=2.0,
+            markerfacecolor="none",
+        )
+
+        mask_model = (
+            (model_df.current_density_A_cm2.to_numpy() >= x_min)
+            & (model_df.current_density_A_cm2.to_numpy() <= x_max)
+        )
+        mask_article = (
+            (article_df.current_density_A_cm2.to_numpy() >= x_min)
+            & (article_df.current_density_A_cm2.to_numpy() <= x_max)
+        )
+        local_y = np.concatenate(
+            [
+                model_df.V_cell_V.to_numpy()[mask_model],
+                article_df.value.to_numpy()[mask_article],
+            ]
+        )
+        padding = max(0.0015, 0.14 * float(np.ptp(local_y)))
+        inset.set_xlim(x_min, x_max)
+        inset.set_ylim(float(np.min(local_y)) - padding, float(np.max(local_y)) + padding)
+        inset.grid(True, alpha=0.38, linewidth=0.5)
+        inset.tick_params(labelsize=5.8, pad=1.2)
+        inset.text(
+            0.5,
+            0.96,
+            f"{title}: {_decimal_comma(point['difference_V'] * 1000.0, 3)} mV\n"
+            f"{point['temperature']}",
+            transform=inset.transAxes,
+            ha="center",
+            va="top",
+            fontsize=6.1,
+            color=edge_color,
+            bbox=dict(facecolor="white", edgecolor="none", alpha=0.86, pad=1.0),
+            zorder=8,
+        )
+        inset.scatter(
+            [center, center],
+            [point["model_V"], point["article_V"]],
+            s=22,
+            facecolor="white",
+            edgecolor=edge_color,
+            linewidth=1.0,
+            zorder=6,
+        )
+        mark_inset(
+            ax,
+            inset,
+            loc1=2,
+            loc2=4,
+            fc="none",
+            ec=edge_color,
+            linestyle="--",
+            linewidth=0.85,
+        )
+
+    add_difference_inset(
+        maximum,
+        loc="upper center",
+        title="MAIOR DIFERENÇA",
+        edge_color="#8B1A1A",
+        width="34%",
+        height="35%",
+    )
+    add_difference_inset(
+        minimum,
+        loc="lower left",
+        title="MENOR DIFERENÇA",
+        edge_color="#176B3A",
+        width="34%",
+        height="35%",
+    )
+
+    ax.set_xlim(0, 1.0)
+    ax.set_ylim(0.5, 1.1)
+    ax.set_xlabel("Densidade de corrente (A/cm²)")
+    ax.set_ylabel("Tensão da célula (V)")
+    ax.grid(True, alpha=0.55)
+    ax.legend(
+        loc="lower center",
+        bbox_to_anchor=(0.5, 1.01),
+        fontsize=6.2,
+        ncol=2,
+        borderaxespad=0.0,
+    )
+    return fig
+
+
 def figure3_single_error_panel_bytes(data: dict, panel: str, fmt: str = "svg", reference_data: dict | None = None) -> bytes:
     """Exporta individualmente um painel de erro percentual da tensão.
 
@@ -791,6 +1113,26 @@ def figure3_single_error_panel_bytes(data: dict, panel: str, fmt: str = "svg", r
     fig = _single_error_panel_matplotlib_figure(data, panel, reference_data)
     buffer = BytesIO()
     fig.savefig(buffer, format=fmt, dpi=180 if fmt == "png" else None, bbox_inches="tight")
+    plt.close(fig)
+    buffer.seek(0)
+    return buffer.read()
+
+
+def figure3_temperature_error_zoom_svg_bytes(data: dict, reference_data: dict) -> bytes:
+    """Exporta o erro de tensão por temperatura com detalhe ampliado em SVG."""
+    fig = _temperature_error_zoom_matplotlib_figure(data, reference_data)
+    buffer = BytesIO()
+    fig.savefig(buffer, format="svg", bbox_inches="tight")
+    plt.close(fig)
+    buffer.seek(0)
+    return buffer.read()
+
+
+def figure3_temperature_voltage_zoom_svg_bytes(data: dict, reference_data: dict) -> bytes:
+    """Exporta tensão × temperatura com zoom nas diferenças mínima e máxima."""
+    fig = _temperature_voltage_zoom_matplotlib_figure(data, reference_data)
+    buffer = BytesIO()
+    fig.savefig(buffer, format="svg", bbox_inches="tight")
     plt.close(fig)
     buffer.seek(0)
     return buffer.read()

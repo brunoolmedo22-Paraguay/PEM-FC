@@ -15,6 +15,8 @@ from visualization.plots import (
     figure3_plotly,
     figure3_single_error_panel_bytes,
     figure3_single_panel_bytes,
+    figure3_temperature_error_zoom_svg_bytes,
+    figure3_temperature_voltage_zoom_svg_bytes,
     figure3_voltage_error_svg_bytes,
 )
 from visualization.optimization import (
@@ -278,6 +280,17 @@ with tab_results:
         f"tensao_efeito_pressao_{suffix}.svg",
         "image/svg+xml",
     )
+    if reference_data is not None:
+        panel_voltage_temp_zoom_svg = figure3_temperature_voltage_zoom_svg_bytes(
+            data, reference_data
+        )
+        st.download_button(
+            "Tensão × temperatura — ZOOM NAS DIFERENÇAS MÁXIMA E MÍNIMA (SVG)",
+            panel_voltage_temp_zoom_svg,
+            "tensao_temperatura_zoom_diferencas_v1.svg",
+            "image/svg+xml",
+            key="download_tensao_temperatura_zoom_diferencas_v1",
+        )
 
     if reference_data is not None:
         st.markdown("### Downloads individuais dos erros")
@@ -288,7 +301,10 @@ with tab_results:
         error_voltage_pressure_svg = figure3_single_error_panel_bytes(
             data, "error_voltage_pressure", "svg", reference_data=reference_data
         )
-        e1, e2 = st.columns(2)
+        error_voltage_temp_zoom_svg = figure3_temperature_error_zoom_svg_bytes(
+            data, reference_data
+        )
+        e1, e2, e3 = st.columns(3)
         e1.download_button(
             "Erro de tensão × temperatura — SEM TÍTULO + EXTREMOS (SVG)",
             error_voltage_temp_svg,
@@ -301,6 +317,13 @@ with tab_results:
             error_voltage_pressure_svg,
             "erro_tensao_efeito_pressao.svg",
             "image/svg+xml",
+        )
+        e3.download_button(
+            "Erro de tensão × temperatura — COM ZOOM (SVG)",
+            error_voltage_temp_zoom_svg,
+            "erro_tensao_temperatura_com_zoom_v1.svg",
+            "image/svg+xml",
+            key="download_erro_tensao_temperatura_com_zoom_v1",
         )
 
 with tab_sensitivity:
