@@ -110,6 +110,7 @@ def test_comparison_overlay_uses_digitized_curves_only_when_requested():
     )
     subplot_titles = [annotation.text for annotation in comparison.layout.annotations]
     assert "Efeito da temperatura sobre a tensão" not in subplot_titles
+    assert tuple(comparison.layout.xaxis.range) == (0, 1.0)
 
     temperature_svg = figure3_single_panel_bytes(
         model_data,
@@ -120,3 +121,5 @@ def test_comparison_overlay_uses_digitized_curves_only_when_requested():
     assert "Efeito da temperatura sobre a tensão" not in temperature_svg
     assert "MODELO PROPOSTO — T = 298,15 K" in temperature_svg
     assert "N. ALTINTAŞ AND R. ERTAN — T = 298,15 K" in temperature_svg
+    assert "<!-- 1.0 -->" in temperature_svg
+    assert "<!-- 1.2 -->" not in temperature_svg

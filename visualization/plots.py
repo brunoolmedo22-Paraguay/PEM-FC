@@ -432,7 +432,7 @@ def figure3_plotly(data: dict, reference_data: dict | None = None):
     for row, col in [(1, 1), (1, 2), (2, 1), (2, 2)]:
         fig.update_xaxes(
             title_text="Densidade de corrente (A/cm²)",
-            range=[0, 1.2],
+            range=[0, 1.0] if (row, col) == (1, 1) else [0, 1.2],
             dtick=0.2,
             showgrid=True,
             gridcolor="rgba(100,100,100,0.35)",
@@ -591,13 +591,13 @@ def _matplotlib_figure(data: dict, reference_data: dict | None = None):
             )
 
     settings = [
-        (ax1, "Tensão da célula (V)", (0.5, 1.1)),
-        (ax2, "Potência (W)", (0, 6000)),
-        (ax3, "Eficiência (%)", (25, 60)),
-        (ax4, "Tensão da célula (V)", (0.5, 1.1)),
+        (ax1, "Tensão da célula (V)", (0.5, 1.1), 1.0),
+        (ax2, "Potência (W)", (0, 6000), 1.2),
+        (ax3, "Eficiência (%)", (25, 60), 1.2),
+        (ax4, "Tensão da célula (V)", (0.5, 1.1), 1.2),
     ]
-    for ax, ylabel, ylim in settings:
-        ax.set_xlim(0, 1.2)
+    for ax, ylabel, ylim, x_max in settings:
+        ax.set_xlim(0, x_max)
         ax.set_ylim(*ylim)
         ax.set_xlabel("Densidade de corrente (A/cm²)")
         ax.set_ylabel(ylabel)
@@ -656,6 +656,7 @@ def _single_panel_matplotlib_figure(
     # O painel de tensão × temperatura é inserido no artigo com o título na
     # legenda do LaTeX. Por isso, sua exportação é 25% mais baixa que o padrão.
     figure_height = 3.6 if panel == "voltage_temperature" else 4.8
+    x_max = 1.0 if panel == "voltage_temperature" else 1.2
     fig, ax = plt.subplots(1, 1, figsize=(6.6, figure_height), constrained_layout=True)
 
     if panel == "voltage_temperature":
@@ -715,7 +716,7 @@ def _single_panel_matplotlib_figure(
     else:
         raise ValueError(f"Painel desconhecido: {panel}")
 
-    ax.set_xlim(0, 1.2)
+    ax.set_xlim(0, x_max)
     ax.set_xlabel("Densidade de corrente (A/cm²)")
     ax.grid(True, alpha=0.55)
     ax.legend(loc="best", fontsize=8)
