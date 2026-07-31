@@ -254,10 +254,11 @@ with tab_results:
     panel_voltage_pressure_svg = figure3_single_panel_bytes(data, "voltage_pressure", "svg", reference_data=reference_data)
     p1, p2, p3, p4 = st.columns(4)
     p1.download_button(
-        "Tensão × temperatura (SVG)",
+        "Tensão × temperatura — SEM TÍTULO (SVG)",
         panel_voltage_temp_svg,
-        f"tensao_efeito_temperatura_{suffix}.svg",
+        f"tensao_temperatura_sem_titulo_v2_{suffix}.svg",
         "image/svg+xml",
+        key=f"download_tensao_temperatura_sem_titulo_v2_{suffix}",
     )
     p2.download_button(
         "Potência do stack (SVG)",

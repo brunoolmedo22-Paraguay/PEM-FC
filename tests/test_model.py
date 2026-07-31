@@ -71,7 +71,11 @@ def test_comparison_overlay_uses_digitized_curves_only_when_requested():
     import pandas as pd
 
     from simulation.solver import build_figure3_dataset
-    from visualization.plots import figure3_matplotlib_bytes, figure3_plotly
+    from visualization.plots import (
+        figure3_matplotlib_bytes,
+        figure3_plotly,
+        figure3_single_panel_bytes,
+    )
 
     root = Path(__file__).resolve().parents[1] / "data" / "otekon_figure3"
     reference = {
@@ -97,3 +101,22 @@ def test_comparison_overlay_uses_digitized_curves_only_when_requested():
     comparison = figure3_plotly(model_data, reference_data=reference)
     assert len(comparison.data) == 2 * len(plain.data)
     assert len(figure3_matplotlib_bytes(model_data, "svg", reference_data=reference)) > 1000
+
+    # Regressão: todas as rotas devem usar a mesma identificação e o painel
+    # individual destinado ao LaTeX não pode recuperar o título interno.
+    assert comparison.data[0].name == "MODELO PROPOSTO — T = 298,15 K"
+    assert comparison.data[len(plain.data)].name == (
+        "N. ALTINTAŞ AND R. ERTAN — T = 298,15 K"
+    )
+    subplot_titles = [annotation.text for annotation in comparison.layout.annotations]
+    assert "Efeito da temperatura sobre a tensão" not in subplot_titles
+
+    temperature_svg = figure3_single_panel_bytes(
+        model_data,
+        "voltage_temperature",
+        "svg",
+        reference_data=reference,
+    ).decode("utf-8")
+    assert "Efeito da temperatura sobre a tensão" not in temperature_svg
+    assert "MODELO PROPOSTO — T = 298,15 K" in temperature_svg
+    assert "N. ALTINTAŞ AND R. ERTAN — T = 298,15 K" in temperature_svg

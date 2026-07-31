@@ -17,6 +17,12 @@ RED = "#FF0000"
 ARTICLE_BLUE_COMPLEMENT = "#FF8A00"
 ARTICLE_RED_COMPLEMENT = "#00A6D6"
 
+# Identificação padronizada das curvas de tensão × temperatura. Estes textos
+# são usados em todas as rotas (Plotly, SVG geral e SVG individual) para evitar
+# que cada botão exporte uma legenda diferente.
+PROPOSED_MODEL_LABEL = "MODELO PROPOSTO"
+ARTICLE_SHORT_REFERENCE = "N. ALTINTAŞ AND R. ERTAN"
+
 
 def _add_article_trace_plotly(
     fig,
@@ -215,7 +221,7 @@ def figure3_plotly(data: dict, reference_data: dict | None = None):
         rows=2,
         cols=2,
         subplot_titles=(
-            "Efeito da temperatura sobre a tensão",
+            "",
             "Potência do stack",
             "Eficiência elétrica",
             "Efeito da pressão do ar",
@@ -234,7 +240,7 @@ def figure3_plotly(data: dict, reference_data: dict | None = None):
             go.Scatter(
                 x=df.current_density_A_cm2,
                 y=df.V_cell_V,
-                name=f"Modelo — {label}",
+                name=f"{PROPOSED_MODEL_LABEL} — {label}",
                 line=dict(color=color, width=2.7),
                 legendgroup=f"model_{key}",
             ),
@@ -295,7 +301,7 @@ def figure3_plotly(data: dict, reference_data: dict | None = None):
                 reference_data["voltage"][key],
                 row=1,
                 col=1,
-                name=f"Artigo — {label}",
+                name=f"{ARTICLE_SHORT_REFERENCE} — {label}",
                 color=color,
                 legendgroup=f"article_{key}",
                 showlegend=True,
@@ -395,7 +401,13 @@ def _matplotlib_figure(data: dict, reference_data: dict | None = None):
 
     for key, color, label in [("T_298", BLUE, "T = 298,15 K"), ("T_373", RED, "T = 373,15 K")]:
         df = data[key]
-        ax1.plot(df.current_density_A_cm2, df.V_cell_V, color=color, linewidth=2.2, label=f"Modelo — {label}")
+        ax1.plot(
+            df.current_density_A_cm2,
+            df.V_cell_V,
+            color=color,
+            linewidth=2.2,
+            label=f"{PROPOSED_MODEL_LABEL} — {label}",
+        )
         ax2.plot(df.current_density_A_cm2, df.P_stack_W, color=color, linewidth=2.2, label=f"Modelo — {label}")
         ax3.plot(df.current_density_A_cm2, df.efficiency_percent, color=color, linewidth=2.2, label=f"Modelo — {label}")
 
@@ -413,7 +425,7 @@ def _matplotlib_figure(data: dict, reference_data: dict | None = None):
                 ax1,
                 reference_data["voltage"][key],
                 color=color,
-                label=f"Artigo — {label}",
+                label=f"{ARTICLE_SHORT_REFERENCE} — {label}",
             )
             _plot_article_matplotlib(
                 ax2,
@@ -454,7 +466,6 @@ def _matplotlib_figure(data: dict, reference_data: dict | None = None):
         ax.grid(True, alpha=0.55)
         ax.legend(loc="best", fontsize=8)
 
-    ax1.set_title("Efeito da temperatura sobre a tensão")
     ax2.set_title("Potência do stack")
     ax3.set_title("Eficiência elétrica")
     ax4.set_title("Efeito da pressão do ar")
@@ -515,7 +526,7 @@ def _single_panel_matplotlib_figure(
                 df.V_cell_V,
                 color=color,
                 linewidth=2.2,
-                label=f"MODELO PROPOSTO — {label}",
+                label=f"{PROPOSED_MODEL_LABEL} — {label}",
             )
         if reference_data is not None:
             for key, color, label in [("T_298", ARTICLE_BLUE_COMPLEMENT, "T = 298,15 K"), ("T_373", ARTICLE_RED_COMPLEMENT, "T = 373,15 K")]:
@@ -523,7 +534,7 @@ def _single_panel_matplotlib_figure(
                     ax,
                     reference_data["voltage"][key],
                     color=color,
-                    label=f"N. ALTINTAŞ AND R. ERTAN — {label}",
+                    label=f"{ARTICLE_SHORT_REFERENCE} — {label}",
                 )
         ax.set_ylabel("Tensão da célula (V)")
         ax.set_ylim(0.5, 1.1)
