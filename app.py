@@ -242,7 +242,7 @@ with tab_results:
         d4.download_button(
             "Baixar erro de tensão em SVG",
             voltage_error_svg,
-            "erro_percentual_tensao.svg",
+            "erro_percentual_tensao_v2.svg",
             "image/svg+xml",
         )
 
@@ -290,10 +290,11 @@ with tab_results:
         )
         e1, e2 = st.columns(2)
         e1.download_button(
-            "Erro de tensão × temperatura (SVG)",
+            "Erro de tensão × temperatura — SEM TÍTULO + EXTREMOS (SVG)",
             error_voltage_temp_svg,
-            "erro_tensao_efeito_temperatura.svg",
+            "erro_tensao_temperatura_sem_titulo_extremos_v2.svg",
             "image/svg+xml",
+            key="download_erro_tensao_temperatura_extremos_v2",
         )
         e2.download_button(
             "Erro de tensão × pressão (SVG)",

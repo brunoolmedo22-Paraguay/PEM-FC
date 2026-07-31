@@ -1,11 +1,16 @@
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pandas as pd
 
 from models.pemfc_model import PEMFCModel
 from pemfc_config import DEFAULT_PARAMS
 from simulation.solver import build_figure3_dataset
-from visualization.plots import figure3_percentage_error_plotly
+from visualization.plots import (
+    _single_error_panel_matplotlib_figure,
+    figure3_percentage_error_plotly,
+    figure3_single_error_panel_bytes,
+)
 
 
 def _reference_data():
@@ -32,8 +37,37 @@ def _reference_data():
 
 def test_percentage_error_plot_has_all_curves_and_nonnegative_values():
     data = build_figure3_dataset(PEMFCModel(DEFAULT_PARAMS))
-    figure = figure3_percentage_error_plotly(data, _reference_data())
+    reference = _reference_data()
+    figure = figure3_percentage_error_plotly(data, reference)
 
     assert len(figure.data) == 8
     assert all(len(trace.x) == 101 for trace in figure.data)
     assert all(min(trace.y) >= 0 for trace in figure.data)
+    assert tuple(figure.layout.xaxis.range) == (0, 1.0)
+
+    annotation_texts = [annotation.text or "" for annotation in figure.layout.annotations]
+    assert "Erro na tensão — efeito da temperatura" not in annotation_texts
+    assert any("Máx." in text for text in annotation_texts)
+    assert any("Mín." in text for text in annotation_texts)
+
+    matplotlib_figure = _single_error_panel_matplotlib_figure(
+        data,
+        "error_voltage_temperature",
+        reference,
+    )
+    axis = matplotlib_figure.axes[0]
+    assert axis.get_title() == ""
+    assert axis.get_xlim() == (0.0, 1.0)
+    assert any("Máx." in text.get_text() for text in axis.texts)
+    assert any("Mín." in text.get_text() for text in axis.texts)
+    plt.close(matplotlib_figure)
+
+    svg = figure3_single_error_panel_bytes(
+        data,
+        "error_voltage_temperature",
+        "svg",
+        reference_data=reference,
+    ).decode("utf-8")
+    assert "Erro na tensão — efeito da temperatura" not in svg
+    assert "Máx." in svg
+    assert "Mín." in svg

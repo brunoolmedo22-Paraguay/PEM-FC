@@ -70,6 +70,90 @@ def _percentage_error_series(model_df, reference_df, model_column: str):
     return x_reference, error_percent, model_values, article_values
 
 
+def _temperature_voltage_error_extrema(data: dict, reference_data: dict):
+    """Retorna os extremos globais das duas curvas entre 0 e 1 A/cm²."""
+    candidates = []
+    temperature_cases = [
+        ("T_298", "T = 298,15 K"),
+        ("T_373", "T = 373,15 K"),
+    ]
+
+    for key, temperature_label in temperature_cases:
+        x, error_percent, _, _ = _percentage_error_series(
+            data[key],
+            reference_data["voltage"][key],
+            "V_cell_V",
+        )
+        valid = (
+            np.isfinite(x)
+            & np.isfinite(error_percent)
+            & (x >= 0.0)
+            & (x <= 1.0)
+        )
+        x_valid = x[valid]
+        error_valid = error_percent[valid]
+        if len(x_valid) == 0:
+            continue
+
+        for index in (int(np.argmin(error_valid)), int(np.argmax(error_valid))):
+            candidates.append(
+                {
+                    "current_density": float(x_valid[index]),
+                    "error_percent": float(error_valid[index]),
+                    "temperature": temperature_label,
+                }
+            )
+
+    if not candidates:
+        raise ValueError("Não há pontos válidos para calcular os extremos do erro.")
+
+    minimum = min(candidates, key=lambda point: point["error_percent"])
+    maximum = max(candidates, key=lambda point: point["error_percent"])
+    return minimum, maximum
+
+
+def _decimal_comma(value: float, digits: int) -> str:
+    return f"{value:.{digits}f}".replace(".", ",")
+
+
+def _add_temperature_error_extrema_annotations_plotly(
+    fig,
+    data: dict,
+    reference_data: dict,
+):
+    minimum, maximum = _temperature_voltage_error_extrema(data, reference_data)
+    annotations = [
+        ("Máx.", maximum, 95, 38, "#8B1A1A", 3),
+        ("Mín.", minimum, 75, -58, "#176B3A", 4),
+    ]
+    for label, point, ax_offset, ay_offset, color, digits in annotations:
+        text = (
+            f"<b>{label}: {_decimal_comma(point['error_percent'], digits)}%</b>"
+            f"<br>em {_decimal_comma(point['current_density'], 3)} A/cm²"
+            f"<br>{point['temperature']}"
+        )
+        fig.add_annotation(
+            x=point["current_density"],
+            y=point["error_percent"],
+            text=text,
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1,
+            arrowwidth=1.3,
+            arrowcolor=color,
+            ax=ax_offset,
+            ay=ay_offset,
+            bgcolor="rgba(255,255,255,0.94)",
+            bordercolor=color,
+            borderwidth=1,
+            borderpad=4,
+            font=dict(size=10, color="#222222"),
+            align="left",
+            row=1,
+            col=1,
+        )
+
+
 def _add_percentage_error_trace(
     fig,
     model_df,
@@ -116,7 +200,7 @@ def figure3_percentage_error_plotly(data: dict, reference_data: dict):
         rows=2,
         cols=2,
         subplot_titles=(
-            "Erro na tensão — efeito da temperatura",
+            "",
             "Erro na potência do stack",
             "Erro na eficiência elétrica",
             "Erro na tensão — efeito da pressão",
@@ -174,10 +258,12 @@ def figure3_percentage_error_plotly(data: dict, reference_data: dict):
             showlegend=True,
         )
 
+    _add_temperature_error_extrema_annotations_plotly(fig, data, reference_data)
+
     for row, col in [(1, 1), (1, 2), (2, 1), (2, 2)]:
         fig.update_xaxes(
             title_text="Densidade de corrente (A/cm²)",
-            range=[0, 1.2],
+            range=[0, 1.0] if (row, col) == (1, 1) else [0, 1.2],
             dtick=0.2,
             showgrid=True,
             gridcolor="rgba(100,100,100,0.35)",
@@ -394,6 +480,58 @@ def _plot_voltage_error_matplotlib(ax, model_df, reference_df, *, model_column: 
     )
 
 
+def _annotate_temperature_error_extrema_matplotlib(
+    ax,
+    data: dict,
+    reference_data: dict,
+):
+    minimum, maximum = _temperature_voltage_error_extrema(data, reference_data)
+    annotations = [
+        ("Máx.", maximum, (78, -28), "#8B1A1A", 3, "top"),
+        ("Mín.", minimum, (38, 52), "#176B3A", 4, "bottom"),
+    ]
+
+    for label, point, offset, color, digits, vertical_alignment in annotations:
+        ax.scatter(
+            [point["current_density"]],
+            [point["error_percent"]],
+            s=48,
+            facecolor="white",
+            edgecolor=color,
+            linewidth=1.5,
+            zorder=6,
+        )
+        annotation_text = (
+            f"{label}: {_decimal_comma(point['error_percent'], digits)}%\n"
+            f"em {_decimal_comma(point['current_density'], 3)} A/cm²\n"
+            f"{point['temperature']}"
+        )
+        ax.annotate(
+            annotation_text,
+            xy=(point["current_density"], point["error_percent"]),
+            xytext=offset,
+            textcoords="offset points",
+            ha="left",
+            va=vertical_alignment,
+            fontsize=7.5,
+            color="#222222",
+            bbox=dict(
+                boxstyle="round,pad=0.32",
+                facecolor="white",
+                edgecolor=color,
+                alpha=0.95,
+            ),
+            arrowprops=dict(
+                arrowstyle="->",
+                color=color,
+                linewidth=1.2,
+                shrinkA=2,
+                shrinkB=3,
+            ),
+            zorder=7,
+        )
+
+
 
 def _matplotlib_figure(data: dict, reference_data: dict | None = None):
     fig, axes = plt.subplots(2, 2, figsize=(13.34, 8.0), constrained_layout=True)
@@ -486,6 +624,8 @@ def _voltage_error_matplotlib_figure(data: dict, reference_data: dict):
             label=label,
         )
 
+    _annotate_temperature_error_extrema_matplotlib(ax1, data, reference_data)
+
     for key, color, label in [("P_1", BLUE, "P_ar = 1 atm"), ("P_5", RED, "P_ar = 5 atm")]:
         _plot_voltage_error_matplotlib(
             ax2,
@@ -497,13 +637,13 @@ def _voltage_error_matplotlib_figure(data: dict, reference_data: dict):
         )
 
     for ax in (ax1, ax2):
-        ax.set_xlim(0, 1.2)
         ax.set_xlabel("Densidade de corrente (A/cm²)")
         ax.set_ylabel("Erro percentual absoluto (%)")
         ax.grid(True, alpha=0.55)
         ax.legend(loc="best", fontsize=8)
 
-    ax1.set_title("Erro na tensão — efeito da temperatura")
+    ax1.set_xlim(0, 1.0)
+    ax2.set_xlim(0, 1.2)
     ax2.set_title("Erro na tensão — efeito da pressão")
     return fig
 
@@ -613,7 +753,8 @@ def _single_error_panel_matplotlib_figure(data: dict, panel: str, reference_data
                 color=color,
                 label=label,
             )
-        ax.set_title("Erro na tensão — efeito da temperatura")
+        _annotate_temperature_error_extrema_matplotlib(ax, data, reference_data)
+        x_max = 1.0
 
     elif panel == "error_voltage_pressure":
         for key, color, label in [("P_1", BLUE, "P_ar = 1 atm"), ("P_5", RED, "P_ar = 5 atm")]:
@@ -626,11 +767,12 @@ def _single_error_panel_matplotlib_figure(data: dict, panel: str, reference_data
                 label=label,
             )
         ax.set_title("Erro na tensão — efeito da pressão")
+        x_max = 1.2
 
     else:
         raise ValueError(f"Painel de erro desconhecido: {panel}")
 
-    ax.set_xlim(0, 1.2)
+    ax.set_xlim(0, x_max)
     ax.set_xlabel("Densidade de corrente (A/cm²)")
     ax.set_ylabel("Erro percentual absoluto (%)")
     ax.grid(True, alpha=0.55)
